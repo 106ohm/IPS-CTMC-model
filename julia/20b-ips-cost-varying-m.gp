@@ -1,0 +1,46 @@
+reset session
+$data11 << EOD
+ 1 3558.078649545814
+ 2 3402.8328800098398
+ 3 3442.8499037651254
+ 4 3484.2667825290355
+ 5 3525.6019434614454
+ 6 3566.8535729915907
+EOD
+$data12 << EOD
+ 1 3295.4346599664823
+ 2 3295.4346599664823
+ 3 3295.4346599664823
+ 4 3295.4346599664823
+ 5 3295.4346599664823
+ 6 3295.4346599664823
+EOD
+$data13 << EOD
+ 1 2638.6652176667326
+ 2 1860.8309807262515
+ 3 1941.0496141165077
+ 4 2070.8807056098985
+ 5 2210.5323165316695
+ 6 2352.3309994888145
+EOD
+$data14 << EOD
+ 1 2639.588459206212
+ 2 1828.2390636441135
+ 3 1902.6760810176397
+ 4 2030.6980168279367
+ 5 2168.970936231719
+ 6 2309.5362362581345
+EOD
+reset
+
+set xtics nomirror
+set ytics nomirror
+set notitle
+set border 3
+set xlabel 'm'
+set ylabel 'C_F'
+set key at graph 1.0, graph 0.65
+set yrange [1600:3600]
+set ytics add ('1600' 1600, '3600' 3600)
+plot $data11 with linespoints lt 3 dt 1 title 'MR', $data12 with linespoints lt 6 dt 1 title 'SR', $data13 with linespoints lt 4 dt 1 title 'CR', $data14 with linespoints lt 8 dt 1 title 'IR'
+unset multiplot

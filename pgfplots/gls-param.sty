@@ -1,0 +1,230 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Extend glossaries with parametric entries
+% Copyright 2019 Silvano Chiaradonna
+%
+% This version does not require glossaries-extra package,
+% being the new field "category" defined by \glsaddstoragekey.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\ProvidesPackage{gls-param}[2021/04/22 Parametric Glossary Entries]
+
+% This package redefines the command \gls:
+% \gls[⟨options⟩]{⟨label⟩}[⟨insert⟩] |
+% \gls[⟨options⟩]{⟨label⟩}[⟨arg1⟩][⟨arg2⟩][⟨arg3⟩][⟨arg4⟩] 
+
+% Use \ensuremath  in the glossaries entries when formulas defined in
+% fields may be used both in text and math (for example for the field
+% "text").
+
+% This package also defines the new commands: \glsentrytextp.
+
+% The new command \glsentrytextp: \glsentrytextp{⟨label⟩}[⟨arg1⟩][⟨arg2⟩][⟨arg3⟩][⟨arg4⟩]
+% to extend \glsentrytext with 4 optional parameters, one for each parameter of the glossary entry.
+% Use \glsentrytext and \glsentrytextp in sectioning and caption as suggested in the manual.
+% Using \glsentrytextp in glossaries entries fails due to recursive parameters definition.
+
+% The keywords for the parameters in the glossary entries are:
+% \glsparam (first parameter)
+% \glsparamA (first parameter)
+% \glsparamB (second parameter)
+% \glsparamC (third parameter)
+% \glsparamD (fourth parameter)
+
+% Example of parametric entry:
+%\newglossaryentry{uparamfour}{%
+%  category=param,% requires an paramument
+%  user1={a},% the default parameter value, if omit this field the corresponding global default value is used
+%  user2={b},% the default parameter value, if omit this field the corresponding global default value is used
+%  user3={c},% the default parameter value, if omit this field the corresponding global default value is used
+%  user4={d},% the default parameter value, if omit this field the corresponding global default value is used
+%  name={\(U^{a}_{b}(c,d)\)},
+%  text={U^{\glsparamA}_{\glsparamB}(\glsparamC,\glsparamD)},
+%  description={symbol with 4 parameter values},
+%  sort={uparamthree},
+%  type={symbols}
+%}
+
+%Example non parametric entries:
+%\newglossaryentry{RO}{%
+%  name={\emph{DARep}}
+%  sort={darep},
+%  description={\emph{\acl{ROh}}},
+%  type={symbols}  
+%}
+%
+%\newglossaryentry{san}{%
+%  name={SAN},
+%  first={\text{\glsentrydesc{\glslabel}\space} (\glsentrytext{\glslabel})}, 
+%  description={Stochastic Activity Network},
+%  type={\acronymtype}
+%}
+
+% Examples of \gls usage:
+% \gls{uparamfour}[1][2][3][4]
+% \gls{uparamfour}[1][][3][4]
+% \gls{uparamfour}[1][][3][]
+% \gls{uparamfour}[1][2][3] % use default value d
+% \gls{uparamfour}[1][2] % use default values c and d
+% \gls{uparamfour}[][2] % use default values c and d
+% \gls{uparamfour}[1] % use default values b, c and d
+% \gls{uparamfour}[] % use default value b, c and d
+% \gls{uparamfour} % use default values: a, b, c and d
+
+% to force space after \gls: required for submission to
+% Elsevier PEVAL, based on TeX Live 2018/W32TeX
+\RequirePackage{xspace}
+
+\RequirePackage{kvoptions} % to define key=value style options
+
+\RequirePackage{glossaries}
+
+\RequirePackage{xparse}
+
+\glsnoexpandfields
+
+% optional arguments
+\DeclareStringOption[i]{glsarg}[i]
+\DeclareStringOption[i]{glsargA}[i]
+\DeclareStringOption[ii]{glsargB}[ii]
+\DeclareStringOption[iii]{glsargC}[iii]
+\DeclareStringOption[iv]{glsargD}[iv]
+
+% default parameters values for gls entries with 4 parameters
+% different default parameters can be used for each entry, defining the
+% fields: user1, user2, user3, user4,...
+%\newcommand*{\glsparam}{i}% first parameter default value
+%\newcommand*\glsparamA{i}% first parameter default value
+%\newcommand*\glsparamB{ii}% second parameter default value
+%\newcommand*\glsparamC{iii}% third parameter default value
+%\newcommand*\glsparamD{iv}% fourth parameter default value
+%
+% options for \usepackage to define args
+\edef\glsargprefix{\@currname}
+\newcommand{\glsargconcat}[2]{\csname #1@#2\endcsname}
+\newcommand*{\glsparam}{\glsargconcat{\glsargprefix}{glsarg}}% first parameter default value
+\newcommand*{\glsparamA}{\glsargconcat{\glsargprefix}{glsargA}}% first parameter default value
+\newcommand*{\glsparamB}{\glsargconcat{\glsargprefix}{glsargB}}% second parameter default value
+\newcommand*{\glsparamC}{\glsargconcat{\glsargprefix}{glsargC}}% third parameter default value
+\newcommand*{\glsparamD}{\glsargconcat{\glsargprefix}{glsargD}}% fouth parameter default value
+\ProcessKeyvalOptions{\@currname}
+
+% customize the format of the link text for gls with parameters
+\def\glsnovalue{-NoValue-} % used when the optional parameters follow
+                           % each other to allow to specify only the
+                           % following parameters by providing empty
+                           % previous parameters.
+\NewDocumentCommand{\setglsparamssplitted}{mmmmm}{% 5 parameters: for
+                                % 4 optional parameters + gls label
+  % parameter 1
+  \def\glstempa{#1}%
+  \ifx\glsnovalue\glstempa% use default parameter value
+  \relax
+  \ifglshasfield{useri}{#5}{%
+    \let\glsparam\glscurrentfieldvalue% default parameter value
+    \let\glsparamA\glscurrentfieldvalue% default parameter value
+  }{}%
+  \else% use (empty or not empty) input parameter value
+  \ifdefempty{\glstempa}
+  {% empty parameter value
+    \relax%
+    \let\glsparam\empty%
+    \let\glsparamA\empty%
+  }%
+  {% not empty parameter value
+    \let\glsparam\glstempa%
+    \let\glsparamA\glstempa%
+  }%
+  \fi
+  % parameter 2
+  \def\glstempb{#2}%
+  \ifx\glsnovalue\glstempb% use default parameter value
+  \relax
+  \ifglshasfield{userii}{#5}{%
+    \let\glsparamB\glscurrentfieldvalue% default parameter value
+  }{}%
+  \else% use (empty or not empty) input parameter value
+  \ifdefempty{\glstempb}
+  {% empty parameter value
+    \relax%
+    \let\glsparamB\empty%
+  }%
+  {% not empty parameter value
+    \let\glsparamB\glstempb
+  }%
+  \fi
+  % parameter 3
+  \def\glstempc{#3}%
+  \ifx\glsnovalue\glstempc% use default parameter value
+  \relax
+  \ifglshasfield{useriii}{#5}{%
+    \let\glsparamC\glscurrentfieldvalue% default parameter value
+  }{}%
+  \else% use (empty or not empty) input parameter value
+  \ifdefempty{\glstempc}
+  {% empty parameter value
+    \relax%
+    \let\glsparamC\empty%
+  }%
+  {% not empty parameter value
+    \let\glsparamC\glstempc
+  }%
+  \fi
+  % parameter 4
+  \def\glstempd{#4}%
+  \ifx\glsnovalue\glstempd% use default parameter value
+  \relax
+  \ifglshasfield{useriv}{#5}{%
+    \let\glsparamD\glscurrentfieldvalue% default parameter value
+  }{}%
+  \else% use (empty or not empty) input parameter value
+  \ifdefempty{\glstempD}
+  {% empty parameter value
+    \relax%
+    \let\glsparamD\empty%
+  }%
+  {% not empty parameter value
+    \let\glsparamD\glstempd
+  }%
+  \fi
+}
+
+% define new field: category
+\glsaddstoragekey  
+ {category}% key/field name  
+ {}% default value if not explicitly set  
+ {\glscategory}% custom command to access the value if required
+
+% extend the command \gls with 4 optional parameters for the entry
+% parameters: \gls[⟨options⟩]{⟨label⟩}[⟨insert⟩] |
+% \gls[⟨options⟩]{⟨label⟩}[⟨arg1⟩][⟨arg2⟩][⟨arg3⟩][⟨arg4⟩] 
+\let\oldgls\gls
+\RenewDocumentCommand{\gls}{ s O{} m O{-NoValue-} O{-NoValue-} O{-NoValue-} O{-NoValue-} }
+{%
+  \ifglsfieldeq{#3}{category}{param}% if category set to "param"
+  {% gls with parameters
+    \setglsparamssplitted{#4}{#5}{#6}{#7}{#3}%
+    \IfBooleanTF {#1}%
+    {\oldgls*[#2]{#3}}%
+    {\oldgls[#2]{#3}}%
+  }%
+  {% old gls command without parameters
+    \def\glstemp{#4}%
+    \ifx\glsnovalue\glstemp%
+    \IfBooleanTF {#1}%
+    {\oldgls*[#2]{#3}}%
+    {\oldgls[#2]{#3}}%
+    \else
+    \IfBooleanTF {#1}%
+    {\oldgls*[#2]{#3}[#4]}%
+    {\oldgls[#2]{#3}[#4]}%
+    \fi
+  }%
+  \xspace%
+}
+
+% new command \glsentrytextp extending \glsentrytext with 4 optional parameters, one for each parameter of the glossary entry: \glsentrytextp{⟨label⟩}[⟨arg1⟩][⟨arg2⟩][⟨arg3⟩][⟨arg4⟩] 
+\NewDocumentCommand{\glsentrytextp}{ m O{-NoValue-} O{-NoValue-} O{-NoValue-} O{-NoValue-} }
+{%
+ \setglsparamssplitted{#2}{#3}{#4}{#5}{#1}%
+ \glsentrytext{#1}%
+}

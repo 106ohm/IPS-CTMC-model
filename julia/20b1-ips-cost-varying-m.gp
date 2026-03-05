@@ -1,0 +1,44 @@
+reset session
+$data9 << EOD
+ 1 8908.693199329646
+ 2 8908.693199329646
+ 3 8908.693199329646
+ 4 8908.693199329646
+ 5 8908.693199329646
+ 6 8908.693199329646
+EOD
+$data10 << EOD
+ 1 23742.142661318485
+ 2 19845.486994513
+ 3 19856.538840451532
+ 4 19897.687255438002
+ 5 19939.019509487534
+ 6 19980.271102929182
+EOD
+$data11 << EOD
+ 1 21657.839622751835
+ 2 3377.6743317702076
+ 3 2263.4697412409682
+ 4 2145.7132505253353
+ 5 2228.0035397634388
+ 6 2356.415204583814
+EOD
+$data12 << EOD
+ 1 22357.173051848087
+ 2 3437.120817350049
+ 3 2235.44493590463
+ 4 2107.722622692155
+ 5 2186.9637196027575
+ 6 2313.7450820987942
+EOD
+reset
+
+set xtics nomirror
+set ytics nomirror
+set border 3
+set xlabel 'm'
+set ylabel 'C_F'
+set key at graph 1.0, graph 0.65
+set title '{/Symbol g}_F=10*{/Symbol g}_{SR}'
+plot $data9 with linespoints lt 6 dt 1 title 'SR', $data10 with linespoints lt 3 dt 1 title 'MR', $data11 with linespoints lt 4 dt 1 title 'CR', $data12 with linespoints lt 8 dt 1 title 'IR'
+unset multiplot

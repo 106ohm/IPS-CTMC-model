@@ -1,0 +1,189 @@
+% arara: pdflatex: {synctex: yes} 
+% arara: pdflatex: {synctex: yes}
+
+\documentclass{standalone}
+%
+\usepackage[T1]{fontenc}
+% T1 fonts will be used to generate the final print and online PDFs,
+% so please use T1 fonts in your manuscript whenever possible.
+% Other font encondings may result in incorrect characters.
+%
+\usepackage{graphicx}
+% Used for displaying a sample figure. If possible, figure files should
+% be included in EPS format.
+%
+% If you use the hyperref package, please uncomment the following two lines
+% to display URLs in blue roman font according to Springer's eBook style:
+%\usepackage{color}
+%\renewcommand\UrlFont{\color{blue}\rmfamily}
+
+%\usepackage{amsmath,amssymb,bbm}
+
+\usepackage{tikz}
+\usetikzlibrary{calc,positioning,patterns,automata,arrows,shapes.geometric}
+
+\usepackage{pgfplots}
+% This ensures that your .tex files always result in the same output,
+% even if you install a new version of pgfplots.
+\pgfplotsset{compat=1.18}
+\tikzset{every mark/.append style={solid}}
+
+%\usepackage[caption=false,font=footnotesize]{subfig}
+%\newcommand{\psubref}[1]{\protect\subref{#1}}
+%%% fix:
+%%% https://tex.stackexchange.com/questions/633505/standalone-with-floats-figures
+ %\makeatletter
+ %\def\@captype{figure}
+ %\makeatother
+% and before each \subfloat use:
+%\setcounter{subfigure}{<number>}
+
+
+% glossaries v4.50: 
+% If you want to continue using \MakeTextUppercase in the glossaries
+% then simply load textcase explicitly, otherwise,
+% use \glsuppercase command for all-caps and mfirstuc's commands for sentence case
+% [ https://www.dickimaw-books.com/faq.php?action=view&category=glossaries#undeftextcase ]
+\usepackage{textcase}
+
+% glossaries
+\usepackage[nonumberlist,nopostdot,nogroupskip,symbols,acronyms]{glossaries}
+% use the package gls-param.sty
+\usepackage[glsarg=i, glsargA=i, glsargB=ii, glsargC=iiii]{gls-param}
+% or input the file gls-param.tex
+%\input{gls-param}
+% Remove \makenoidxglossaries if you don't want any glossaries
+%\makenoidxglossaries
+% new glossary
+\newglossary[glg]{operationsymbols}{gls}{glo}{Operation Mode} 
+\newglossary[glg]{crsymbols}{gls}{glo}{Component Redundancy} 
+\newglossary[glg]{lowlevelsymbols}{gls}{glo}{Low level model} % create
+% symbols for low level model
+\newglossary[glg]{simsymbols}{gls}{glo}{Simulation-related notation} % create symbols
+% for Simulation-related notation
+\newglossary[glg]{approxsymbols}{gls}{glo}{Approximation-related
+	notation} % create symbols for approximation-related notation 
+\newglossary[glg]{casestudysymbols}{gls}{glo}{Common in case studies}
+% create symbols common in case studies 
+\newglossary[glg]{casestudy1symbols}{gls}{glo}{Case study 1}
+% create symbols for case study 1 
+\newglossary[glg]{casestudy2symbols}{gls}{glo}{Case study 2}
+% create symbols for case study 2
+\setglossarystyle{alttree} % alttree style, a useful alternative to
+% the tabular-like styles, such as the long
+% style
+% the glossaries definitions
+\newignoredglossary{ignored} % ignored glossary type
+\input{glossaries}
+
+% to use \mathllap
+% https://tex.stackexchange.com/questions/95287/how-do-i-hang-another-right-aligned-line-in-a-cases-environment
+\usepackage{mathtools}
+
+% international unit system
+\usepackage{siunitx}
+
+\begin{document}
+
+\begin{tikzpicture}
+  \def\crmark{square} % line mark for CR
+  \def\irmark{oplus} % line mark for IR
+  \def\srmark{o} % line mark for SR
+  \def\mrmark{asterisk} % line mark for MR
+  
+  \def\muuminmark{triangle} % line mark for muU max
+  \def\muumaxmark{x} % line mark for muU min
+
+  % the legend
+  \path (0.2, 7.6) node[scale=1.0, anchor=north west, text width=4.4em]
+  {%
+    \tikz{\draw [black,solid] (0,0) -- (1,0)
+      node[pos=1.0,anchor=west]{\(\glsentrytext{mu}=\qty{0.5}{\per\hour}\)};}
+    \\[-0.5em]
+    \tikz{\draw [black,dashed] (0,0) -- (1,0) node[pos=1.0,anchor=west]{\(\glsentrytext{mu}=\qty{2}{\per\hour}\)};}
+  };
+
+  % let both axes use the same layers
+  \pgfplotsset{set layers}
+  \begin{axis}[
+    scale only axis,
+    axis y line*=left,
+    axis x line*=bottom,
+    xlabel=\glsentrytext{lu} (hours$^{-1}$),
+    ylabel=\glsentrytext{ssu} (hours),
+    x tick label style={
+      /pgf/number format/.cd,
+      fixed,
+      fixed zerofill,
+      precision=1,
+      /tikz/.cd
+    },
+    xticklabel style={rotate=0},
+    extra y ticks={0.005},
+    legend style ={at={(1,1.05)},anchor=north east,draw=none,fill=none},
+    %legend entries={DC,AC,{CR},{IR},{SR},{MR},{},{},{},{},{},{},{},{}},
+    legend columns=1,
+    ymode=log,
+    xmin=0.0003,
+    xmax=0.0021,
+    ymin=0.000001,
+    ymax=0.005
+    ]
+    % CR:
+    \addplot[black,dashed,mark=\crmark] table [x index=18, y expr=1.0-\thisrowno{7}, col sep=comma] {results/results-r17-min-max-muU-varyingLambdaU.csv};
+    %\addlegendentry{\gls{cr} for min \gls{ld}}
+    \addplot[black,solid,mark=\crmark] table [x index=18, y expr=1.0-\thisrowno{16}, col sep=comma] {results/results-r17-min-max-muU-varyingLambdaU.csv};
+    %\addlegendentry{\gls{cr} for max \gls{ld}}
+    % IR:
+    \addplot[black,solid,mark=\irmark] table [x index=18, y expr=1.0-\thisrowno{14}, col sep=comma] {results/results-r17-min-max-muU-varyingLambdaU.csv};
+    %\addlegendentry{\gls{ir} for max \gls{ld}}
+    \addplot[black,dashed,mark=\irmark] table [x index=18, y expr=1.0-\thisrowno{5}, col sep=comma] {results/results-r17-min-max-muU-varyingLambdaU.csv};
+    %\addlegendentry{\gls{ir} for min \gls{ld}}
+    % SR:
+    \addplot[black,solid,mark=\srmark] table [x index=18, y expr=1.0-\thisrowno{10}, col sep=comma] {results/results-r17-min-max-muU-varyingLambdaU.csv};
+    %\addlegendentry{\gls{sr} for max \gls{ld}}
+    \addplot[black,dashed,mark=\srmark] table [x index=18, y expr=1.0-\thisrowno{1}, col sep=comma] {results/results-r17-min-max-muU-varyingLambdaU.csv};
+    %\addlegendentry{\gls{sr} for min \gls{ld}}
+    % MR:
+    \addplot[black,solid,mark=\mrmark] table [x index=18, y expr=1.0-\thisrowno{3}, col sep=comma] {results/results-r17-min-max-muU-varyingLambdaU.csv};
+    %\addlegendentry{\gls{mr} for min \gls{ld}}
+    \addplot[black,dashed,mark=\mrmark] table [x index=18, y expr=1.0-\thisrowno{12}, col sep=comma] {results/results-r17-min-max-muU-varyingLambdaU.csv};
+    %\addlegendentry{\gls{mr} for max \gls{ld}}
+  \end{axis}
+  \begin{axis}[
+    scale only axis,
+    axis y line*=right,
+    axis x line=none,
+%    y tick label style={
+%      /pgf/number format/.cd,
+%      fixed,
+%      fixed zerofill,
+%      precision=1,
+%      /tikz/.cd
+%   },
+    ylabel style = {align=center},
+    ylabel=\glsentrytext{ssuu},
+    legend style ={at={(1.0,0.2)},anchor=north
+      east,draw=none,fill=none},
+    legend cell align={left}, 
+    legend entries={{\(\glsentrytext{ssuu},\glsentrytext{mu}=\qty{0.5}{\per\hour}\)},{\(\glsentrytext{ssuu},\glsentrytext{mu}=\qty{2}{\per\hour}\)}},
+    legend columns=1,
+    extra y ticks={0.005},
+    ymode=log,
+    xmin=0.0003,
+    xmax=0.0021,
+    ymin=0.000001,
+    ymax=0.005
+    ]
+    \addplot[densely dotted, mark=\muuminmark] table [x index=18, y expr=1.0-\thisrowno{0}, col sep=comma] {results/results-r17-min-max-muU-varyingLambdaU.csv};
+    \addplot[dotted, mark=\muumaxmark] table [x index=18, y expr=1.0-\thisrowno{9}, col sep=comma] {results/results-r17-min-max-muU-varyingLambdaU.csv};
+    ]
+ \end{axis}
+\end{tikzpicture}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
